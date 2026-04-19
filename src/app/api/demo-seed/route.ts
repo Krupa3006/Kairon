@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { demoJobSeeds } from "@/lib/demo-jobs";
+import { buildDemoJobSeedsForUser } from "@/lib/demo-jobs";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 
 export async function POST() {
@@ -19,10 +19,7 @@ export async function POST() {
     return NextResponse.json({ seeded: false, reason: "Jobs already exist" });
   }
 
-  const payload = demoJobSeeds.map((job) => ({
-    ...job,
-    user_id: user.id,
-  }));
+  const payload = buildDemoJobSeedsForUser(user.id);
 
   const { error } = await supabase.from("job_queue").insert(payload);
 

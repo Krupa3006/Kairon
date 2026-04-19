@@ -39,12 +39,12 @@ export default async function DashboardPage() {
             <div>
               <p className="text-sm font-semibold text-orange-700">
                 {jobs.length > 0
-                  ? `${jobs.length} roles are active in your pipeline`
+                  ? `${jobs.length} roles are active in your strategic pipeline`
                   : "Your strategic workspace is ready"}
               </p>
               <p className="text-xs text-orange-600/80">
                 {jobs.length > 0
-                  ? "Supabase-backed jobs are now driving the dashboard."
+                  ? "A starter pipeline is live now. Replace demo roles with your real targets anytime."
                   : "Seed demo jobs or import your first pipeline to bring the dashboard to life."}
               </p>
             </div>

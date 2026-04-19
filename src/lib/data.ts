@@ -1,6 +1,10 @@
 import { formatRelative } from "@/lib/utils";
 import { getCurrentProfile, requireUser } from "@/lib/auth";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import {
+  getSupabaseAdminClient,
+  getSupabaseServerClient,
+} from "@/lib/supabase-server";
+import { buildDemoJobSeedsForUser } from "@/lib/demo-jobs";
 import type {
   ActivityItem,
   DashboardMetric,
@@ -32,6 +36,29 @@ const fallbackInsightTiles: InsightTile[] = [
     description: "Response timing is calculated once the pipeline has activity.",
   },
 ];
+
+async function seedStarterPipelineForUser(userId: string) {
+  const client = getSupabaseAdminClient() ?? getSupabaseServerClient();
+
+  if (!client) {
+    return false;
+  }
+
+  const { count, error: countError } = await client
+    .from("job_queue")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (countError || (count ?? 0) > 0) {
+    return false;
+  }
+
+  const { error: insertError } = await client
+    .from("job_queue")
+    .insert(buildDemoJobSeedsForUser(userId));
+
+  return !insertError;
+}
 
 export const tailorSuggestions: TailorSuggestion[] = [
   {
@@ -131,7 +158,7 @@ function mapJob(row: Record<string, unknown>): Job {
 
 function buildMetrics(profile: UserProfile | null, jobs: Job[]): DashboardMetric[] {
   const submittedCount = jobs.filter((job) =>
-    ["submitted", "followed_up", "response", "interview", "offer"].includes(job.status),
+    ["applied", "submitted", "followed_up", "response", "interview", "offer"].includes(job.status),
   ).length;
   const pendingCount = jobs.filter((job) => job.stage === "saved").length;
 
@@ -244,7 +271,7 @@ function buildInboxThreads(jobs: Job[]): InboxThread[] {
 }
 
 export async function getJobsForCurrentUser() {
-  await requireUser();
+  const user = await requireUser();
   const supabase = getSupabaseServerClient();
 
   if (!supabase) {
@@ -254,13 +281,30 @@ export async function getJobsForCurrentUser() {
   const { data } = await supabase
     .from("job_queue")
     .select("*")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  return (data ?? []).map((row) => mapJob(row));
+  let rows = data ?? [];
+
+  if (rows.length === 0) {
+    const seeded = await seedStarterPipelineForUser(user.id);
+
+    if (seeded) {
+      const { data: seededRows } = await supabase
+        .from("job_queue")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      rows = seededRows ?? [];
+    }
+  }
+
+  return rows.map((row) => mapJob(row));
 }
 
 export async function getJobForCurrentUser(jobId: string) {
-  await requireUser();
+  const user = await requireUser();
   const supabase = getSupabaseServerClient();
 
   if (!supabase) {
@@ -270,6 +314,7 @@ export async function getJobForCurrentUser(jobId: string) {
   const { data } = await supabase
     .from("job_queue")
     .select("*")
+    .eq("user_id", user.id)
     .eq("id", jobId)
     .single();
 

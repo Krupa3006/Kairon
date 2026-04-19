@@ -19,7 +19,7 @@ type DemoJobSeed = {
   posted_at?: string;
 };
 
-export const demoJobSeeds: DemoJobSeed[] = [
+const demoJobSeeds: DemoJobSeed[] = [
   {
     title: "Director of Product Strategy",
     company: "Stripe",
@@ -75,3 +75,26 @@ export const demoJobSeeds: DemoJobSeed[] = [
     posted_at: new Date().toISOString(),
   },
 ];
+
+export function buildDemoJobSeedsForUser(userId: string) {
+  const now = Date.now();
+
+  return demoJobSeeds.map((job, index) => {
+    const createdAt = new Date(now - index * 1000 * 60 * 60 * 4).toISOString();
+    const appliedAt = job.applied_at
+      ? new Date(now - index * 1000 * 60 * 60 * 3).toISOString()
+      : undefined;
+    const followUpDue = job.follow_up_due
+      ? new Date(now + 1000 * 60 * 60 * 24 * 2).toISOString()
+      : undefined;
+
+    return {
+      ...job,
+      user_id: userId,
+      created_at: createdAt,
+      posted_at: createdAt,
+      applied_at: appliedAt,
+      follow_up_due: followUpDue,
+    };
+  });
+}
