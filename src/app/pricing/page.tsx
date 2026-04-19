@@ -58,7 +58,7 @@ export default function PricingPage() {
             <div
               key={tier.name}
               className={`card flex flex-col ${
-                tier.highlight ? "bg-navy text-white" : ""
+                tier.highlight ? "card-dark text-white" : ""
               }`}
             >
               {tier.badge ? (

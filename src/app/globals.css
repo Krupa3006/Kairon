@@ -103,6 +103,32 @@ a {
   transform: translateY(-1px);
 }
 
+.card-dark {
+  background:
+    radial-gradient(circle at top right, rgba(76, 119, 245, 0.28), transparent 38%),
+    linear-gradient(180deg, #17124b 0%, #0B1139 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: white;
+  box-shadow: 0 24px 60px rgba(11, 17, 57, 0.24);
+}
+
+.card.bg-navy {
+  background:
+    radial-gradient(circle at top right, rgba(76, 119, 245, 0.28), transparent 38%),
+    linear-gradient(180deg, #17124b 0%, #0B1139 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: white;
+  box-shadow: 0 24px 60px rgba(11, 17, 57, 0.24);
+}
+
+.card-dark:hover {
+  box-shadow: 0 28px 70px rgba(11, 17, 57, 0.28);
+}
+
+.card.bg-navy:hover {
+  box-shadow: 0 28px 70px rgba(11, 17, 57, 0.28);
+}
+
 /* Badge */
 .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
 .badge-blue { background: #EFF6FF; color: #2563EB; }
