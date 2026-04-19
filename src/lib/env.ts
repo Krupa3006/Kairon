@@ -16,3 +16,7 @@ export function getSupabaseAnonKey() {
 export function getSupabaseServiceRoleKey() {
   return process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 }
+
+export function getApiBaseUrl() {
+  return process.env.NEXT_PUBLIC_API_URL ?? "";
+}

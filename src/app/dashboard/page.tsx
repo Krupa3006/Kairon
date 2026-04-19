@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Bell, BriefcaseBusiness, Filter, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, Bell, BriefcaseBusiness, Filter, Sparkles, Target, Upload, Zap } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import DemoSeedButton from "@/components/DemoSeedButton";
 import { getAppData } from "@/lib/data";
 
 export default async function DashboardPage() {
@@ -44,8 +43,8 @@ export default async function DashboardPage() {
               </p>
               <p className="text-xs text-orange-600/80">
                 {jobs.length > 0
-                  ? "A starter pipeline is live now. Replace demo roles with your real targets anytime."
-                  : "Seed demo jobs or import your first pipeline to bring the dashboard to life."}
+                  ? "Real jobs in Supabase are now driving your dashboard."
+                  : "Upload your CV, define your targets, and connect live jobs to bring the dashboard to life."}
               </p>
             </div>
           </div>
@@ -96,10 +95,20 @@ export default async function DashboardPage() {
           <div className="card space-y-4">
             <h3 className="display-title text-3xl font-bold text-navy">No jobs yet</h3>
             <p className="max-w-2xl text-sm leading-7 text-gray-500">
-              The product is now wired to real Supabase data. To make tomorrow's launch smooth,
-              load the demo pipeline now or start inserting your own jobs into `job_queue`.
+              Kairon is now using your real account data. Finish onboarding and start feeding
+              live opportunities into `job_queue` so scoring, pipeline review, and tailoring can
+              work against your actual search.
             </p>
-            <DemoSeedButton />
+            <div className="flex flex-wrap gap-3">
+              <Link href="/onboarding/upload" className="btn btn-primary">
+                <Upload size={16} />
+                Upload CV
+              </Link>
+              <Link href="/onboarding/preferences" className="btn btn-secondary">
+                <Target size={16} />
+                Define targets
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">

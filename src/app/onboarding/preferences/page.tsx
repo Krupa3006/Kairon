@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import OnboardingLayout from "@/components/OnboardingLayout";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 const targetRoles = [
   "Product Strategy",
@@ -15,11 +17,15 @@ const targetRoles = [
 const workTypes = ["Remote", "Hybrid", "On-site"];
 
 export default function PreferencesPage() {
+  const router = useRouter();
   const [selectedRoles, setSelectedRoles] = useState<string[]>([
     "Product Strategy",
     "Head of Growth",
   ]);
   const [selectedWorkType, setSelectedWorkType] = useState("Remote");
+  const [locations, setLocations] = useState("New York, London, Remote");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   function toggleRole(role: string) {
     setSelectedRoles((current) =>
@@ -27,6 +33,56 @@ export default function PreferencesPage() {
         ? current.filter((item) => item !== role)
         : [...current, role],
     );
+  }
+
+  async function handleSaveAndContinue() {
+    const supabase = getSupabaseBrowserClient();
+
+    if (!supabase) {
+      setError("Supabase is not configured.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error("You need to be signed in to save preferences.");
+      }
+
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({
+          job_title: selectedRoles.join(", "),
+          location: locations,
+          remote_preference:
+            selectedWorkType === "On-site"
+              ? "onsite"
+              : selectedWorkType.toLowerCase(),
+          agent_active: true,
+        })
+        .eq("id", user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      router.push("/onboarding/ready");
+      router.refresh();
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Unable to save your preferences.",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -68,7 +124,8 @@ export default function PreferencesPage() {
                 <input
                   className="input mt-3"
                   placeholder="e.g. New York, London, Remote"
-                  defaultValue="New York, London, Remote"
+                  value={locations}
+                  onChange={(event) => setLocations(event.target.value)}
                 />
               </div>
               <div>
@@ -96,10 +153,11 @@ export default function PreferencesPage() {
             <Link href="/onboarding/profile" className="btn btn-secondary">
               Back
             </Link>
-            <Link href="/onboarding/ready" className="btn btn-primary">
-              Find My First Matches
-            </Link>
+            <button onClick={handleSaveAndContinue} className="btn btn-primary" disabled={saving}>
+              {saving ? "Saving..." : "Find My First Matches"}
+            </button>
           </div>
+          {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
         </div>
 
         <div className="space-y-6">

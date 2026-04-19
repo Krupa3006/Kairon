@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { Shield, Sparkles } from "lucide-react";
 import OnboardingLayout from "@/components/OnboardingLayout";
+import { getCurrentProfile } from "@/lib/auth";
+import { extractCvHighlights, extractSkillTags } from "@/lib/profile-insights";
 import { tailorSuggestions } from "@/lib/data";
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const profile = await getCurrentProfile();
+  const highlights = extractCvHighlights(profile?.cv_text);
+  const skills = extractSkillTags(profile?.cv_text);
+
   return (
     <OnboardingLayout step={2}>
       <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
@@ -34,30 +40,29 @@ export default function ProfilePage() {
           <div className="card">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-navy">Extracted experience</h2>
-              <button className="text-sm font-semibold text-brand">Add role</button>
+              <Link href="/settings" className="text-sm font-semibold text-brand">Edit profile</Link>
             </div>
 
             <div className="mt-6 space-y-6">
-              <div className="border-l-2 border-brand pl-5">
-                <p className="text-2xl font-bold text-navy">Senior Strategic Architect</p>
-                <p className="mt-1 text-sm font-semibold text-brand">
-                  Velocity Dynamics · 2021 - Present
-                </p>
-                <p className="mt-3 text-sm leading-7 text-gray-500">
-                  Led the transformation of operational frameworks into cloud-native
-                  delivery systems, achieving a 40% reduction in deployment latency.
-                </p>
-              </div>
-              <div className="border-l-2 border-surface-border pl-5">
-                <p className="text-2xl font-bold text-navy">Systems Lead</p>
-                <p className="mt-1 text-sm font-semibold text-gray-400">
-                  Prism Global · 2018 - 2021
-                </p>
-                <p className="mt-3 text-sm leading-7 text-gray-500">
-                  Orchestrated multi-region infrastructure scaling for enterprise
-                  clients during peak demand cycles.
-                </p>
-              </div>
+              {highlights.length > 0 ? (
+                highlights.map((highlight, index) => (
+                  <div
+                    key={highlight}
+                    className={`${index === 0 ? "border-brand" : "border-surface-border"} border-l-2 pl-5`}
+                  >
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-400">
+                      Extract {String(index + 1).padStart(2, "0")}
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-gray-600">{highlight}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="border-l-2 border-surface-border pl-5">
+                  <p className="text-sm leading-7 text-gray-500">
+                    Upload your CV first so Kairon can extract your verified career history.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -67,10 +72,15 @@ export default function ProfilePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/60">
               Extraction confidence
             </p>
-            <p className="display-title mt-3 text-6xl font-bold">94%</p>
+            <p className="display-title mt-3 text-6xl font-bold">
+              {profile?.cv_text ? "92%" : "0%"}
+            </p>
             <p className="mt-2 text-sm text-white/75">High precision</p>
             <div className="mt-6 h-2 rounded-full bg-white/20">
-              <div className="h-2 w-[94%] rounded-full bg-white" />
+              <div
+                className="h-2 rounded-full bg-white"
+                style={{ width: profile?.cv_text ? "92%" : "0%" }}
+              />
             </div>
           </div>
 
@@ -79,13 +89,7 @@ export default function ProfilePage() {
               Identified core skills
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {[
-                "Cloud Strategy",
-                "Architecture Design",
-                "Team Leadership",
-                "SaaS Scaling",
-                "Agile Ops",
-              ].map((skill) => (
+              {(skills.length > 0 ? skills : ["Upload CV", "Parse profile"]).map((skill) => (
                 <span key={skill} className="badge badge-purple">
                   {skill}
                 </span>
@@ -103,7 +107,9 @@ export default function ProfilePage() {
                 <div key={suggestion.id} className="rounded-2xl bg-surface p-4">
                   <p className="text-sm font-semibold text-navy">{suggestion.title}</p>
                   <p className="mt-2 text-sm leading-7 text-gray-500">
-                    {suggestion.reason}
+                    {profile?.cv_text
+                      ? suggestion.reason
+                      : "Upload your CV to unlock grounded rewrite suggestions based on real experience."}
                   </p>
                 </div>
               ))}
